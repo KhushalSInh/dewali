@@ -149,35 +149,95 @@
             color: #e0e0ff;
         }
         
-        /* Lakshmi Mata Animation */
-        .lakshmi-container {
+        /* Indian Diya Animation */
+        .diya-container {
             position: relative;
             width: 200px;
-            height: 300px;
+            height: 200px;
             margin: 20px auto;
         }
         
-        .lakshmi {
+        .diya-body {
             position: absolute;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 300"><path d="M100,50 C120,30 150,40 150,70 C150,100 120,110 100,90 C80,110 50,100 50,70 C50,40 80,30 100,50 Z" fill="%23FFD700"/><circle cx="100" cy="40" r="10" fill="%23FF4500"/><path d="M80,120 C90,100 110,100 120,120 L120,250 C110,270 90,270 80,250 Z" fill="%23FFD700"/><path d="M60,140 C70,130 90,130 100,140 L100,260 C90,270 70,270 60,260 Z" fill="%23FFA500"/><path d="M140,140 C130,130 110,130 100,140 L100,260 C110,270 130,270 140,260 Z" fill="%23FFA500"/></svg>') no-repeat center;
-            background-size: contain;
-            animation: float 6s ease-in-out infinite;
+            width: 120px;
+            height: 60px;
+            background: #8B4513;
+            border-radius: 50% 50% 40% 40%;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 
+                inset 0 -10px 20px rgba(0,0,0,0.3),
+                0 5px 15px rgba(0,0,0,0.5);
             z-index: 2;
         }
         
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
+        .diya-body::before {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 20px;
+            background: #A0522D;
+            border-radius: 50%;
+            top: -10px;
+            left: 10px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
         }
         
-        .lakshmi-glow {
+        .diya-flame {
             position: absolute;
-            width: 120%;
-            height: 120%;
-            top: -10%;
-            left: -10%;
+            width: 30px;
+            height: 70px;
+            background: linear-gradient(to top, #FF4500, #FFD700, #FFFFE0);
+            border-radius: 50% 50% 20% 20%;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 
+                0 0 20px #FF4500,
+                0 0 40px #FFA500;
+            animation: flameFlicker 1.5s infinite alternate;
+            z-index: 3;
+        }
+        
+        .diya-flame::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            top: 10px;
+            left: 5px;
+            filter: blur(5px);
+        }
+        
+        @keyframes flameFlicker {
+            0%, 100% { 
+                transform: translateX(-50%) scaleY(1) scaleX(1); 
+                height: 70px;
+            }
+            25% { 
+                transform: translateX(-50%) scaleY(1.1) scaleX(0.9); 
+                height: 75px;
+            }
+            50% { 
+                transform: translateX(-50%) scaleY(0.9) scaleX(1.1); 
+                height: 65px;
+            }
+            75% { 
+                transform: translateX(-50%) scaleY(1.05) scaleX(0.95); 
+                height: 72px;
+            }
+        }
+        
+        .diya-glow {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
             background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0) 70%);
             border-radius: 50%;
             animation: glowPulse 4s infinite alternate;
@@ -185,8 +245,8 @@
         }
         
         @keyframes glowPulse {
-            0% { transform: scale(1); opacity: 0.5; }
-            100% { transform: scale(1.2); opacity: 0.8; }
+            0% { transform: translateX(-50%) scale(1); opacity: 0.5; }
+            100% { transform: translateX(-50%) scale(1.2); opacity: 0.8; }
         }
         
         /* Fireworks */
@@ -258,6 +318,14 @@
             100% { transform: rotate(360deg); }
         }
         
+        /* From text */
+        .from-text {
+            font-size: 1.5rem;
+            margin-top: 10px;
+            color: #FFD700;
+            font-weight: bold;
+        }
+        
         /* Responsive design */
         @media (max-width: 768px) {
             h1 {
@@ -284,9 +352,23 @@
                 padding: 20px;
             }
             
-            .lakshmi-container {
+            .diya-container {
                 width: 150px;
-                height: 225px;
+                height: 150px;
+            }
+            
+            .diya-body {
+                width: 100px;
+                height: 50px;
+            }
+            
+            .diya-body::before {
+                width: 80px;
+            }
+            
+            .diya-flame {
+                width: 25px;
+                height: 60px;
             }
         }
         
@@ -311,9 +393,27 @@
                 font-size: 3rem;
             }
             
-            .lakshmi-container {
+            .diya-container {
                 width: 120px;
-                height: 180px;
+                height: 120px;
+            }
+            
+            .diya-body {
+                width: 80px;
+                height: 40px;
+            }
+            
+            .diya-body::before {
+                width: 60px;
+            }
+            
+            .diya-flame {
+                width: 20px;
+                height: 50px;
+            }
+            
+            .from-text {
+                font-size: 1.2rem;
             }
         }
     </style>
@@ -334,15 +434,17 @@
         
         <div class="message">નવું વર્ષ તમારા જીવનમાં સુખ, શાંતિ અને સમૃદ્ધિ લાવે!</div>
         
-        <!-- Lakshmi Mata Animation -->
-        <div class="lakshmi-container">
-            <div class="lakshmi-glow"></div>
-            <div class="lakshmi"></div>
+        <!-- Indian Diya Animation -->
+        <div class="diya-container">
+            <div class="diya-glow"></div>
+            <div class="diya-body"></div>
+            <div class="diya-flame"></div>
         </div>
         
         <div class="year">વિક્રમ સંવત ૨૦૮૩</div>
         
         <div class="family-name">રાઠોડ અને કનાડા અને રાજપુરોહિત પરિવાર</div>
+        <div class="from-text">તરફથી</div>
         
         <div class="wishes">
             <p>નવા વર્ષમાં તમારા સપનાઓ સાકાર થઈ જાય,</p>
