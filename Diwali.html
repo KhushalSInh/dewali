@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>નવા વર્ષની શુભકામનાઓ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            z-index: -1;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+            color: #FFD700;
+            line-height: 1.3;
+        }
+        
+        .message {
+            font-size: 1.5rem;
+            margin: 25px 0;
+            line-height: 1.6;
+            color: #fff;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .family-name {
+            font-size: 1.8rem;
+            margin: 30px 0;
+            padding: 15px;
+            background: rgba(255, 215, 0, 0.2);
+            border-radius: 12px;
+            border: 2px dashed #FFD700;
+            color: #FFD700;
+            font-weight: bold;
+        }
+        
+        .wishes {
+            font-size: 1.3rem;
+            margin: 25px 0;
+            line-height: 1.7;
+            color: #e0e0ff;
+        }
+        
+        .fireworks {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+        }
+        
+        .decoration {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.7;
+            z-index: -1;
+        }
+        
+        .year {
+            font-size: 5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #FFD700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .message {
+                font-size: 1.3rem;
+            }
+            
+            .family-name {
+                font-size: 1.5rem;
+            }
+            
+            .wishes {
+                font-size: 1.1rem;
+            }
+            
+            .year {
+                font-size: 4rem;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .message {
+                font-size: 1.1rem;
+            }
+            
+            .family-name {
+                font-size: 1.3rem;
+            }
+            
+            .wishes {
+                font-size: 1rem;
+            }
+            
+            .year {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>નવા વર્ષની ખૂબ ખૂબ શુભકામનાઓ</h1>
+        
+        <div class="message">નવું વર્ષ તમારા જીવનમાં સુખ, શાંતિ અને સમૃદ્ધિ લાવે!</div>
+        
+        <div class="year" id="year">2024</div>
+        
+        <div class="family-name">રાઠોડ અને કનાડા અને રાજપુરોહિત પરિવાર</div>
+        
+        <div class="wishes">
+            <p>નવા વર્ષમાં તમારા સપનાઓ સાકાર થઈ જાય,</p>
+            <p>તમારું દરેક પગલું સફળતા તરફ વધે,</p>
+            <p>આનંદ અને ઉલ્લાસ તમારા આંગણે વસે,</p>
+            <p>આ નવું વર્ષ તમારા માટે શુભ અને મંગલમય થાય!</p>
+        </div>
+    </div>
+
+    <script>
+        // Update year dynamically
+        document.getElementById('year').textContent = new Date().getFullYear() + 1;
+        
+        // Create fireworks effect
+        function createFireworks() {
+            const container = document.querySelector('.container');
+            const colors = ['#FFD700', '#FF4500', '#00FF7F', '#1E90FF', '#FF1493'];
+            
+            for (let i = 0; i < 30; i++) {
+                setTimeout(() => {
+                    const firework = document.createElement('div');
+                    firework.classList.add('fireworks');
+                    
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    firework.style.background = color;
+                    firework.style.boxShadow = `0 0 10px ${color}`;
+                    
+                    const size = Math.random() * 8 + 4;
+                    firework.style.width = `${size}px`;
+                    firework.style.height = `${size}px`;
+                    
+                    const startX = Math.random() * 100;
+                    const startY = Math.random() * 100;
+                    
+                    firework.style.left = `${startX}%`;
+                    firework.style.top = `${startY}%`;
+                    
+                    container.appendChild(firework);
+                    
+                    // Animate firework
+                    const keyframes = [
+                        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                        { transform: `translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px) scale(0)`, opacity: 0 }
+                    ];
+                    
+                    const options = {
+                        duration: 1000 + Math.random() * 1000,
+                        easing: 'cubic-bezier(0.1, 0.8, 0.2, 1)'
+                    };
+                    
+                    firework.animate(keyframes, options).onfinish = () => {
+                        firework.remove();
+                    };
+                }, i * 200);
+            }
+        }
+        
+        // Create decorative elements
+        function createDecorations() {
+            const container = document.querySelector('.container');
+            const decorations = ['✦', '✧', '❋', '✺', '✼', '❁', '✾'];
+            
+            for (let i = 0; i < 15; i++) {
+                const decor = document.createElement('div');
+                decor.classList.add('decoration');
+                decor.textContent = decorations[Math.floor(Math.random() * decorations.length)];
+                
+                const size = Math.random() * 30 + 20;
+                decor.style.fontSize = `${size}px`;
+                
+                const posX = Math.random() * 100;
+                const posY = Math.random() * 100;
+                
+                decor.style.left = `${posX}%`;
+                decor.style.top = `${posY}%`;
+                
+                const rotation = Math.random() * 360;
+                decor.style.transform = `rotate(${rotation}deg)`;
+                
+                container.appendChild(decor);
+            }
+        }
+        
+        // Initialize effects
+        createDecorations();
+        
+        // Create fireworks periodically
+        setInterval(createFireworks, 3000);
+        
+        // Initial fireworks
+        setTimeout(createFireworks, 500);
+    </script>
+</body>
+</html>
