@@ -19,7 +19,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             padding: 20px;
             text-align: center;
             overflow-x: hidden;
@@ -67,6 +66,7 @@
             position: relative;
             overflow: hidden;
             z-index: 1;
+            margin-bottom: 30px;
         }
         
         .container::before {
@@ -326,6 +326,145 @@
             font-weight: bold;
         }
         
+        /* Veer Jawan Shradhanjali Section */
+        .shradhanjali-container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            margin-top: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .shradhanjali-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #FF9933;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+            line-height: 1.3;
+        }
+        
+        .flag-container {
+            position: relative;
+            width: 300px;
+            height: 200px;
+            margin: 20px auto;
+        }
+        
+        .flag-pole {
+            position: absolute;
+            width: 10px;
+            height: 180px;
+            background: linear-gradient(to bottom, #8B4513, #654321);
+            left: 50px;
+            top: 10px;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            z-index: 2;
+        }
+        
+        .flag {
+            position: absolute;
+            width: 0;
+            height: 120px;
+            left: 60px;
+            top: 20px;
+            overflow: hidden;
+            animation: flagUnfurl 3s forwards;
+            z-index: 1;
+        }
+        
+        .saffron {
+            position: absolute;
+            width: 240px;
+            height: 40px;
+            background: #FF9933;
+            top: 0;
+        }
+        
+        .white {
+            position: absolute;
+            width: 240px;
+            height: 40px;
+            background: #FFFFFF;
+            top: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .green {
+            position: absolute;
+            width: 240px;
+            height: 40px;
+            background: #138808;
+            top: 80px;
+        }
+        
+        .ashoka-chakra {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #000080;
+            border-radius: 50%;
+            position: relative;
+            background: #000080;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: rotate 20s linear infinite;
+        }
+        
+        .ashoka-chakra::before {
+            content: '';
+            position: absolute;
+            color: white;
+            font-size: 5px;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .chakra-spoke {
+            position: absolute;
+            width: 1px;
+            height: 15px;
+            background: white;
+            top: 7px;
+            left: 14px;
+            transform-origin: center 8px;
+        }
+        
+        @keyframes flagUnfurl {
+            0% { width: 0; }
+            100% { width: 240px; }
+        }
+        
+        .shradhanjali-message {
+            font-size: 1.4rem;
+            margin: 25px 0;
+            line-height: 1.7;
+            color: #e0e0ff;
+            text-align: center;
+        }
+        
+        .salute {
+            font-size: 3rem;
+            margin: 15px 0;
+            animation: salutePulse 2s infinite;
+        }
+        
+        @keyframes salutePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
         /* Responsive design */
         @media (max-width: 768px) {
             h1 {
@@ -369,6 +508,49 @@
             .diya-flame {
                 width: 25px;
                 height: 60px;
+            }
+            
+            .shradhanjali-title {
+                font-size: 2rem;
+            }
+            
+            .flag-container {
+                width: 250px;
+                height: 170px;
+            }
+            
+            .flag-pole {
+                height: 150px;
+            }
+            
+            .flag {
+                height: 100px;
+            }
+            
+            .saffron, .white, .green {
+                height: 33.33px;
+                width: 200px;
+            }
+            
+            .white {
+                top: 33.33px;
+            }
+            
+            .green {
+                top: 66.66px;
+            }
+            
+            .ashoka-chakra {
+                width: 25px;
+                height: 25px;
+            }
+            
+            .ashoka-chakra::before {
+                font-size: 4px;
+            }
+            
+            .shradhanjali-message {
+                font-size: 1.2rem;
             }
         }
         
@@ -415,6 +597,54 @@
             .from-text {
                 font-size: 1.2rem;
             }
+            
+            .shradhanjali-title {
+                font-size: 1.7rem;
+            }
+            
+            .flag-container {
+                width: 200px;
+                height: 140px;
+            }
+            
+            .flag-pole {
+                height: 120px;
+            }
+            
+            .flag {
+                height: 80px;
+                left: 50px;
+            }
+            
+            .saffron, .white, .green {
+                height: 26.66px;
+                width: 160px;
+            }
+            
+            .white {
+                top: 26.66px;
+            }
+            
+            .green {
+                top: 53.33px;
+            }
+            
+            .ashoka-chakra {
+                width: 20px;
+                height: 20px;
+            }
+            
+            .ashoka-chakra::before {
+                font-size: 3px;
+            }
+            
+            .shradhanjali-message {
+                font-size: 1rem;
+            }
+            
+            .salute {
+                font-size: 2.5rem;
+            }
         }
     </style>
 </head>
@@ -454,6 +684,36 @@
         </div>
     </div>
 
+    <!-- Veer Jawan Shradhanjali Section -->
+    <div class="shradhanjali-container">
+        <h2 class="shradhanjali-title">ભારતીય વીર જવાનોને શ્રદ્ધાંજલિ</h2>
+        
+        <!-- Indian Flag Animation -->
+        <div class="flag-container">
+            <div class="flag-pole"></div>
+            <div class="flag">
+                <div class="saffron"></div>
+                <div class="white">
+                    <div class="ashoka-chakra" id="chakra">
+                        <!-- Chakra spokes will be added by JavaScript -->
+                    </div>
+                </div>
+                <div class="green"></div>
+            </div>
+        </div>
+        
+        <div class="salute">ɪɴᴅɪᴀ</div>
+        
+        <div class="shradhanjali-message">
+            <p>જે વીરોએ દેશ રક્ષણ માટે પોતાનું શરીર અર્પણ કર્યું,</p>
+            <p>જેઓ ચોકી પર રહીને અમારી નિદ્રા સુરક્ષિત રાખે છે,</p>
+            <p>અમે તેમના બલિદાન અને સેવા માટે સદા ઋણી રહીશું.</p>
+            <p>અમારા વીર જવાનોને અમારી વિનમ્ર શ્રદ્ધાંજલિ!</p>
+        </div>
+        
+        <div class="salute">🪖</div>
+    </div>
+
     <script>
         // Create decorative elements
         function createDecorations() {
@@ -478,6 +738,19 @@
                 decor.style.transform = `rotate(${rotation}deg)`;
                 
                 container.appendChild(decor);
+            }
+        }
+        
+        // Create Ashoka Chakra spokes
+        function createChakraSpokes() {
+            const chakra = document.getElementById('chakra');
+            const spokeCount = 24;
+            
+            for (let i = 0; i < spokeCount; i++) {
+                const spoke = document.createElement('div');
+                spoke.classList.add('chakra-spoke');
+                spoke.style.transform = `rotate(${i * (360 / spokeCount)}deg)`;
+                chakra.appendChild(spoke);
             }
         }
         
@@ -568,6 +841,7 @@
         
         // Initialize effects
         createDecorations();
+        createChakraSpokes();
         
         // Create fireworks periodically
         setInterval(createFireworks, 3000);
