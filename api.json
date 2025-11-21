@@ -1,0 +1,33 @@
+{
+  "success": true,
+  "code": 200,
+  "product": [
+    {
+      "id": 1,
+      "name": "Laptop",
+      "price": 55000
+    },
+    {
+      "id": 2,
+      "name": "Mouse",
+      "price": 500
+    }
+  ],
+  "user": [
+    {
+      "id": 1,
+      "name": "Kittu",
+      "email": "kittu@example.com"
+    },
+    {
+      "id": 2,
+      "name": "John",
+      "email": "john@example.com"
+    },
+    {
+      "id": 3,
+      "name": "Sara",
+      "email": "sara@example.com"
+    }
+  ]
+}
