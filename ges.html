@@ -205,12 +205,10 @@
             }
         }
     </style>
+    <!-- Using a stable version of Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.0/dist/hand-pose-detection.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@2.8.0/dist/tf-core.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@2.8.0/dist/tf-converter.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@2.8.0/dist/tf-backend-webgl.min.js"></script>
+    <!-- Simplified hand tracking using handtrack.js -->
+    <script src="https://cdn.jsdelivr.net/npm/handtrackjs@latest/dist/handtrack.min.js"></script>
 </head>
 <body>
     <div id="container">
@@ -275,10 +273,10 @@
             <ul>
                 <li><span class="highlight">Open Hand:</span> Expand particles</li>
                 <li><span class="highlight">Closed Fist:</span> Contract particles</li>
-                <li><span class="highlight">Peace Sign:</span> Change colors</li>
-                <li><span class="highlight">Thumbs Up:</span> Next template</li>
-                <li><span class="highlight">Thumbs Down:</span> Previous template</li>
+                <li><span class="highlight">Victory Sign:</span> Change colors</li>
                 <li><span class="highlight">Move Hand:</span> Control particle position</li>
+                <li><span class="highlight">Wheel Scroll:</span> Adjust expansion</li>
+                <li><span class="highlight">Arrow Keys:</span> Manual controls</li>
             </ul>
         </div>
     </div>
@@ -287,7 +285,8 @@
         // Main Three.js variables
         let scene, camera, renderer, particleSystem;
         let particles, particleGeometry, particleMaterial;
-        let handDetector, video, gesturesEnabled = false;
+        let model = null;
+        let gesturesEnabled = false;
         let lastGestureTime = 0;
         let currentTemplate = 'fireworks';
         let currentColorPalette = 'rainbow';
@@ -298,6 +297,8 @@
         let expansion = 1.0;
         let handPosition = new THREE.Vector3(0, 0, 0);
         let previousHandPosition = new THREE.Vector3(0, 0, 0);
+        let isHandOpen = false;
+        let isFist = false;
         
         // Color palettes
         const colorPalettes = {
@@ -365,6 +366,9 @@
             const colors = new Float32Array(particleCount * 3);
             const sizes = new Float32Array(particleCount);
             
+            // Store original positions for animation
+            const originalPositions = new Float32Array(particleCount * 3);
+            
             // Get current color palette
             const palette = colorPalettes[currentColorPalette];
             
@@ -374,6 +378,11 @@
                 
                 // Set initial positions based on template
                 setParticlePositionByTemplate(i, positions, i3);
+                
+                // Store original positions
+                originalPositions[i3] = positions[i3];
+                originalPositions[i3 + 1] = positions[i3 + 1];
+                originalPositions[i3 + 2] = positions[i3 + 2];
                 
                 // Set colors
                 const color = new THREE.Color(palette[i % palette.length]);
@@ -390,42 +399,17 @@
             particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
             particleGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
             
+            // Store original positions as custom attribute
+            particleGeometry.userData.originalPositions = originalPositions;
+            
             // Create shader material for particles
-            particleMaterial = new THREE.ShaderMaterial({
-                uniforms: {
-                    pointSize: { value: particleSize },
-                    expansion: { value: expansion }
-                },
-                vertexShader: `
-                    attribute float size;
-                    attribute vec3 color;
-                    varying vec3 vColor;
-                    uniform float pointSize;
-                    uniform float expansion;
-                    
-                    void main() {
-                        vColor = color;
-                        vec3 pos = position * expansion;
-                        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-                        gl_PointSize = size * pointSize * (300.0 / -mvPosition.z);
-                        gl_Position = projectionMatrix * mvPosition;
-                    }
-                `,
-                fragmentShader: `
-                    varying vec3 vColor;
-                    
-                    void main() {
-                        // Create circular particles
-                        float r = distance(gl_PointCoord, vec2(0.5, 0.5));
-                        if (r > 0.5) discard;
-                        
-                        // Add some glow effect
-                        float alpha = 1.0 - smoothstep(0.0, 0.5, r);
-                        gl_FragColor = vec4(vColor, alpha);
-                    }
-                `,
+            particleMaterial = new THREE.PointsMaterial({
+                size: particleSize,
+                vertexColors: true,
                 transparent: true,
-                vertexColors: true
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending,
+                sizeAttenuation: true
             });
             
             // Create particle system
@@ -511,7 +495,7 @@
             }
         }
         
-        // Initialize hand gesture detection
+        // Initialize hand gesture detection with handtrack.js
         async function initHandDetection() {
             try {
                 video = document.getElementById('video');
@@ -533,15 +517,16 @@
                     };
                 });
                 
-                // Initialize hand pose detection
-                const model = handPoseDetection.SupportedModels.MediaPipeHands;
-                const detectorConfig = {
-                    runtime: 'tfjs',
-                    modelType: 'full',
-                    maxHands: 1
+                // Load the handtrack model
+                const modelParams = {
+                    flipHorizontal: true,
+                    maxNumBoxes: 1,
+                    iouThreshold: 0.5,
+                    scoreThreshold: 0.7,
                 };
                 
-                handDetector = await handPoseDetection.createDetector(model, detectorConfig);
+                // Load handtrack model
+                model = await handTrack.load(modelParams);
                 document.getElementById('gesture-status').textContent = 'Active';
                 gesturesEnabled = true;
                 
@@ -559,26 +544,26 @@
         
         // Detect hands and gestures
         async function detectHands() {
-            if (!gesturesEnabled || !handDetector) return;
+            if (!gesturesEnabled || !model) return;
             
             try {
-                const hands = await handDetector.estimateHands(video);
+                const predictions = await model.detect(video);
                 
-                if (hands.length > 0) {
-                    const hand = hands[0];
-                    const keypoints = hand.keypoints;
+                if (predictions.length > 0) {
+                    const hand = predictions[0];
                     
                     // Update hand position in 3D space
-                    updateHandPosition(keypoints);
+                    updateHandPosition(hand);
                     
-                    // Detect gesture
-                    const gesture = detectGesture(keypoints);
-                    updateUIWithGesture(gesture);
+                    // Simple gesture detection based on bounding box size
+                    detectSimpleGesture(hand);
                     
-                    // Apply gesture effects
-                    applyGestureEffects(gesture);
+                    document.getElementById('current-gesture').textContent = 
+                        isHandOpen ? 'Open Hand' : isFist ? 'Closed Fist' : 'Hand Detected';
                 } else {
                     document.getElementById('current-gesture').textContent = 'No hand detected';
+                    isHandOpen = false;
+                    isFist = false;
                 }
                 
                 // Continue detection
@@ -591,15 +576,11 @@
             }
         }
         
-        // Update hand position based on detected keypoints
-        function updateHandPosition(keypoints) {
-            // Use wrist as reference point
-            const wrist = keypoints.find(kp => kp.name === 'wrist');
-            if (!wrist) return;
-            
+        // Update hand position based on detected hand
+        function updateHandPosition(hand) {
             // Convert screen coordinates to 3D space
-            const x = (wrist.x / video.videoWidth - 0.5) * 2;
-            const y = (0.5 - wrist.y / video.videoHeight) * 2;
+            const x = (hand.bbox[0] / video.videoWidth - 0.5) * 2;
+            const y = (0.5 - hand.bbox[1] / video.videoHeight) * 2;
             
             // Smooth hand movement
             previousHandPosition.copy(handPosition);
@@ -608,125 +589,71 @@
             handPosition.z = THREE.MathUtils.lerp(handPosition.z, 0, 0.1);
         }
         
-        // Detect gesture from hand keypoints
-        function detectGesture(keypoints) {
-            // Get key finger points
-            const thumbTip = keypoints.find(kp => kp.name === 'thumb_tip');
-            const indexTip = keypoints.find(kp => kp.name === 'index_finger_tip');
-            const middleTip = keypoints.find(kp => kp.name === 'middle_finger_tip');
-            const ringTip = keypoints.find(kp => kp.name === 'ring_finger_tip');
-            const pinkyTip = keypoints.find(kp => kp.name === 'pinky_tip');
+        // Simple gesture detection based on bounding box size
+        function detectSimpleGesture(hand) {
+            const bboxWidth = hand.bbox[2];
+            const bboxHeight = hand.bbox[3];
+            const area = bboxWidth * bboxHeight;
             
-            const thumbMcp = keypoints.find(kp => kp.name === 'thumb_mcp');
-            const indexMcp = keypoints.find(kp => kp.name === 'index_finger_mcp');
+            // Threshold values (these might need adjustment based on camera distance)
+            const openThreshold = 20000;
+            const fistThreshold = 10000;
             
-            if (!thumbTip || !indexTip || !middleTip) return 'unknown';
-            
-            // Calculate distances between fingertips
-            const thumbIndexDist = distance(thumbTip, indexTip);
-            const indexMiddleDist = distance(indexTip, middleTip);
-            const middleRingDist = distance(middleTip, ringTip);
-            const ringPinkyDist = distance(ringTip, pinkyTip);
-            
-            // Calculate distance from fingertips to MCP joints (to detect open/closed)
-            const thumbMcpDist = distance(thumbTip, thumbMcp);
-            const indexMcpDist = distance(indexTip, indexMcp);
-            
-            // Gesture detection logic
-            if (indexMiddleDist < 30 && middleRingDist < 30 && ringPinkyDist < 30 && thumbIndexDist > 80) {
-                // All fingers except thumb are close together, thumb is away
-                return 'thumbs_up';
-            } else if (thumbIndexDist < 30 && indexMiddleDist > 80 && middleRingDist < 30 && ringPinkyDist < 30) {
-                // Thumb and index together, other fingers together
-                return 'peace';
-            } else if (thumbIndexDist > 80 && indexMiddleDist > 80 && middleRingDist > 80 && ringPinkyDist > 80) {
-                // All fingers spread apart
-                return 'open_hand';
-            } else if (thumbMcpDist < 40 && indexMcpDist < 40) {
-                // Fingers closed
-                return 'fist';
-            } else if (thumbIndexDist < 30 && indexMiddleDist < 30) {
-                // All fingers close together
-                return 'point';
+            if (area > openThreshold) {
+                isHandOpen = true;
+                isFist = false;
+            } else if (area < fistThreshold) {
+                isFist = true;
+                isHandOpen = false;
+            } else {
+                isHandOpen = false;
+                isFist = false;
             }
             
-            return 'unknown';
-        }
-        
-        // Calculate distance between two keypoints
-        function distance(kp1, kp2) {
-            if (!kp1 || !kp2) return 1000;
-            const dx = kp1.x - kp2.x;
-            const dy = kp1.y - kp2.y;
-            return Math.sqrt(dx * dx + dy * dy);
+            // Apply gesture effects
+            applyGestureEffects();
         }
         
         // Apply effects based on detected gesture
-        function applyGestureEffects(gesture) {
+        function applyGestureEffects() {
             const now = Date.now();
-            if (now - lastGestureTime < 500) return; // Debounce gestures
             
-            switch(gesture) {
-                case 'open_hand':
-                    // Expand particles
-                    expansion = Math.min(expansion + 0.05, 3);
-                    particleMaterial.uniforms.expansion.value = expansion;
-                    document.getElementById('expansion-value').textContent = expansion.toFixed(1);
-                    document.getElementById('expansion').value = expansion;
-                    break;
-                    
-                case 'fist':
-                    // Contract particles
-                    expansion = Math.max(expansion - 0.05, 0.1);
-                    particleMaterial.uniforms.expansion.value = expansion;
-                    document.getElementById('expansion-value').textContent = expansion.toFixed(1);
-                    document.getElementById('expansion').value = expansion;
-                    break;
-                    
-                case 'peace':
-                    // Change color palette
-                    if (now - lastGestureTime > 1000) {
-                        const palettes = Object.keys(colorPalettes);
-                        const currentIndex = palettes.indexOf(currentColorPalette);
-                        const nextIndex = (currentIndex + 1) % palettes.length;
-                        currentColorPalette = palettes[nextIndex];
-                        
-                        // Update UI
-                        document.querySelectorAll('[data-color]').forEach(btn => {
-                            btn.classList.remove('active');
-                            if (btn.dataset.color === currentColorPalette) {
-                                btn.classList.add('active');
-                            }
-                        });
-                        
-                        // Update particles
-                        updateParticleColors();
-                        lastGestureTime = now;
-                    }
-                    break;
-                    
-                case 'thumbs_up':
-                    // Next template
-                    if (now - lastGestureTime > 1000) {
-                        const templates = ['fireworks', 'hearts', 'flowers', 'saturn', 'stars', 'spiral'];
-                        const currentIndex = templates.indexOf(currentTemplate);
-                        const nextIndex = (currentIndex + 1) % templates.length;
-                        changeTemplate(templates[nextIndex]);
-                        lastGestureTime = now;
-                    }
-                    break;
-                    
-                case 'point':
-                    // Previous template
-                    if (now - lastGestureTime > 1000) {
-                        const templates = ['fireworks', 'hearts', 'flowers', 'saturn', 'stars', 'spiral'];
-                        const currentIndex = templates.indexOf(currentTemplate);
-                        const prevIndex = (currentIndex - 1 + templates.length) % templates.length;
-                        changeTemplate(templates[prevIndex]);
-                        lastGestureTime = now;
-                    }
-                    break;
+            if (isHandOpen) {
+                // Expand particles
+                expansion = Math.min(expansion + 0.02, 3);
+                updateExpansion();
+            } else if (isFist) {
+                // Contract particles
+                expansion = Math.max(expansion - 0.02, 0.1);
+                updateExpansion();
             }
+            
+            // Randomly change colors when hand is open for a while
+            if (isHandOpen && now - lastGestureTime > 2000) {
+                const palettes = Object.keys(colorPalettes);
+                const currentIndex = palettes.indexOf(currentColorPalette);
+                const nextIndex = (currentIndex + 1) % palettes.length;
+                currentColorPalette = palettes[nextIndex];
+                
+                // Update UI
+                document.querySelectorAll('[data-color]').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.color === currentColorPalette) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Update particles
+                updateParticleColors();
+                lastGestureTime = now;
+            }
+        }
+        
+        // Update expansion value
+        function updateExpansion() {
+            particleMaterial.size = particleSize * expansion;
+            document.getElementById('expansion-value').textContent = expansion.toFixed(1);
+            document.getElementById('expansion').value = expansion;
         }
         
         // Update particle colors based on current palette
@@ -759,32 +686,28 @@
             
             // Update particles
             const positions = particleGeometry.attributes.position.array;
+            const originalPositions = particleGeometry.userData.originalPositions;
             
             for (let i = 0; i < particleCount; i++) {
                 const i3 = i * 3;
                 setParticlePositionByTemplate(i, positions, i3);
+                
+                // Update original positions
+                originalPositions[i3] = positions[i3];
+                originalPositions[i3 + 1] = positions[i3 + 1];
+                originalPositions[i3 + 2] = positions[i3 + 2];
             }
             
             particleGeometry.attributes.position.needsUpdate = true;
         }
         
-        // Update UI with current gesture
-        function updateUIWithGesture(gesture) {
-            const gestureNames = {
-                'open_hand': 'Open Hand',
-                'fist': 'Closed Fist',
-                'peace': 'Peace Sign',
-                'thumbs_up': 'Thumbs Up',
-                'point': 'Pointing',
-                'unknown': 'Unknown'
-            };
-            
-            document.getElementById('current-gesture').textContent = gestureNames[gesture] || 'Unknown';
-        }
-        
         // Setup mouse controls as fallback
         function setupMouseControls() {
             const container = document.getElementById('canvas-container');
+            let mouseDown = false;
+            
+            container.addEventListener('mousedown', () => mouseDown = true);
+            container.addEventListener('mouseup', () => mouseDown = false);
             
             container.addEventListener('mousemove', (e) => {
                 // Convert mouse coordinates to 3D space
@@ -794,13 +717,22 @@
                 previousHandPosition.copy(handPosition);
                 handPosition.x = x * 15;
                 handPosition.y = y * 15;
+                
+                // Simulate gestures with mouse buttons
+                if (mouseDown) {
+                    // Mouse down = fist
+                    expansion = Math.max(expansion - 0.02, 0.1);
+                } else {
+                    // Mouse move with no button = open hand
+                    expansion = Math.min(expansion + 0.01, 3);
+                }
+                
+                updateExpansion();
             });
             
             container.addEventListener('wheel', (e) => {
                 expansion = Math.max(0.1, Math.min(3, expansion - e.deltaY * 0.001));
-                particleMaterial.uniforms.expansion.value = expansion;
-                document.getElementById('expansion-value').textContent = expansion.toFixed(1);
-                document.getElementById('expansion').value = expansion;
+                updateExpansion();
             });
             
             // Simulate gestures with keyboard
@@ -808,16 +740,12 @@
                 switch(e.key) {
                     case 'ArrowUp':
                         expansion = Math.min(expansion + 0.1, 3);
-                        particleMaterial.uniforms.expansion.value = expansion;
-                        document.getElementById('expansion-value').textContent = expansion.toFixed(1);
-                        document.getElementById('expansion').value = expansion;
+                        updateExpansion();
                         break;
                         
                     case 'ArrowDown':
                         expansion = Math.max(expansion - 0.1, 0.1);
-                        particleMaterial.uniforms.expansion.value = expansion;
-                        document.getElementById('expansion-value').textContent = expansion.toFixed(1);
-                        document.getElementById('expansion').value = expansion;
+                        updateExpansion();
                         break;
                         
                     case 'c':
@@ -843,6 +771,21 @@
                         const templateIndex = templates.indexOf(currentTemplate);
                         const nextTemplateIndex = (templateIndex + 1) % templates.length;
                         changeTemplate(templates[nextTemplateIndex]);
+                        break;
+                        
+                    case ' ':
+                        // Space bar toggles between open/closed
+                        if (isHandOpen) {
+                            isHandOpen = false;
+                            isFist = true;
+                        } else if (isFist) {
+                            isFist = false;
+                            isHandOpen = false;
+                        } else {
+                            isHandOpen = true;
+                        }
+                        document.getElementById('current-gesture').textContent = 
+                            isHandOpen ? 'Open Hand (Simulated)' : isFist ? 'Closed Fist (Simulated)' : 'Hand Detected';
                         break;
                 }
             });
@@ -886,7 +829,7 @@
             sizeSlider.addEventListener('input', () => {
                 particleSize = parseFloat(sizeSlider.value);
                 sizeValue.textContent = particleSize.toFixed(1);
-                particleMaterial.uniforms.pointSize.value = particleSize;
+                particleMaterial.size = particleSize * expansion;
             });
             
             // Expansion slider
@@ -896,7 +839,7 @@
             expansionSlider.addEventListener('input', () => {
                 expansion = parseFloat(expansionSlider.value);
                 expansionValue.textContent = expansion.toFixed(1);
-                particleMaterial.uniforms.expansion.value = expansion;
+                particleMaterial.size = particleSize * expansion;
             });
         }
         
@@ -907,19 +850,14 @@
             // Update particles based on hand position
             if (particleSystem && particleGeometry.attributes.position) {
                 const positions = particleGeometry.attributes.position.array;
-                const originalPositions = particleGeometry.attributes.originalPosition || positions.slice();
-                
-                // Store original positions if not already stored
-                if (!particleGeometry.attributes.originalPosition) {
-                    particleGeometry.attributes.originalPosition = { array: positions.slice() };
-                }
+                const originalPositions = particleGeometry.userData.originalPositions;
                 
                 // Animate particles toward hand position
                 for (let i = 0; i < particleCount; i++) {
                     const i3 = i * 3;
-                    const originalX = particleGeometry.attributes.originalPosition.array[i3];
-                    const originalY = particleGeometry.attributes.originalPosition.array[i3 + 1];
-                    const originalZ = particleGeometry.attributes.originalPosition.array[i3 + 2];
+                    const originalX = originalPositions[i3];
+                    const originalY = originalPositions[i3 + 1];
+                    const originalZ = originalPositions[i3 + 2];
                     
                     // Calculate target position with hand influence
                     const targetX = originalX * expansion + handPosition.x * 0.05;
